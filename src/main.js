@@ -44,38 +44,9 @@ class Section {
 
     submitButton.addEventListener("click", (event) => {
       event.preventDefault();
+
       const email = inputEmail.value;
       const isEmailValid = isValid(email);
-
-      if (isEmailValid) {
-        if (submitButton.textContent === "Subscribe") {
-        } else if (submitButton.textContent === "Unsubscribe") {
-          localStorage.removeItem("subscriptionEmail");
-          inputEmail.value = "";
-          submitButton.textContent = "Subscribe";
-          inputEmail.classList.remove("hide-input");
-
-          const xhr = new XMLHttpRequest();
-          xhr.open("POST", "/unsubscribe", true);
-          xhr.setRequestHeader("Content-Type", "application/json");
-
-          xhr.onload = function () {
-            if (xhr.status === 200) {
-              alert("You have successfully unsubscribed!");
-            } else {
-              alert("Failed to unsubscribe. Please try again later.");
-            }
-          };
-
-          xhr.onerror = function () {
-            alert("An error occurred. Please try again later.");
-          };
-
-          xhr.send();
-        }
-      } else {
-        alert("Invalid email address. Please try again");
-      }
     });
 
     const savedEmail = localStorage.getItem("subscriptionEmail");
@@ -154,20 +125,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   appContainer.insertBefore(sectionCreator.sectionElement, footer);
 
-  const handleSubscription = (event) => {
-    event.preventDefault();
+  const handleSubscription = () => {
     const email = inputEmail.value;
     const isEmailValid = isValid(email);
+    const isSubscribed = submitButton.textContent === "Subscribe";
 
     if (isEmailValid) {
       const xhr = new XMLHttpRequest();
-      xhr.open("POST", "/unsubscribe", true);
+      xhr.open("POST", isSubscribed ? "/subscribe" : "/unsubscribe", true);
       xhr.setRequestHeader("Content-Type", "application/json");
 
       xhr.onload = function () {
         if (xhr.status === 200) {
           const responsePayload = JSON.parse(xhr.responseText);
-          if (submitButton.textContent === "Subscribe") {
+          if (isSubscribed) {
             localStorage.setItem("subscriptionEmail", email);
             submitButton.textContent = "Unsubscribe";
             inputEmail.classList.add("hide-input");
@@ -179,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
             inputEmail.classList.remove("hide-input");
             alert("You have successfully unsubscribed!");
           }
-        } else {
+        } else if (xhr.status > 400) {
           alert("Failed to perform the action. Please try again later.");
         }
       };
