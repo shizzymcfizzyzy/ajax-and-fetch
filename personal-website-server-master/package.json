@@ -28,7 +28,8 @@
     "mocha": "^10.2.0",
     "nodemon": "^2.0.4",
     "nyc": "^15.1.0",
-    "sinon": "^15.2.0"
+    "sinon": "^15.2.0",
+    "terser": "^5.19.2"
   },
   "description": "## Installation",
   "main": "app.js",

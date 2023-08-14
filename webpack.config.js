@@ -33,6 +33,18 @@ module.exports = (env, argv) => {
           test: /\.(png|jpg|gif)$/i,
           type: "asset/resource",
         },
+        {
+          test: /\.(avif|webp)$/,
+          use: [
+            {
+              loader: "file-loader",
+              options: {
+                name: "[name].[ext]",
+                outputPath: "assets/images",
+              },
+            },
+          ],
+        },
       ],
     },
 

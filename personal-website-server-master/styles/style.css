@@ -169,11 +169,7 @@ main {
 }
 
 .app-section--image-peak {
-  background: linear-gradient(
-      to top,
-      rgba(65, 65, 65, 0.5),
-      rgba(65, 65, 65, 0.5)
-    ),
+  background: linear-gradient(to top, rgba(65, 65, 65, 0.5)),
     url(../assets/images/your-image-here.jpg) no-repeat center/cover;
   height: 800px;
   max-width: 100%;
@@ -203,7 +199,7 @@ main {
       rgba(65, 65, 65, 0.7),
       rgba(65, 65, 65, 0.7)
     ),
-    url(../assets/images/your-image.jpg) no-repeat center/cover;
+    url(../assets/images/your-image-webp.webp) no-repeat center/cover;
   height: 698px;
   max-width: 100%;
   color: white;

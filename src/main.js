@@ -1,5 +1,3 @@
-// import isValid from "./email-validator";
-
 import "../styles/style.css";
 import isValid from "../personal-website-server-master/src/validate-email";
 class Section {
