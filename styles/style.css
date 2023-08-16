@@ -70,7 +70,6 @@ main {
   min-width: 150px;
   text-align: center;
   font-size: 14px;
-  /* line-height: 1.2; */
   border-radius: 26px;
   margin: 12px 0;
 }
@@ -84,9 +83,9 @@ main {
   left: 0;
   right: 0;
   z-index: 1;
-  display: grid;
-  grid-template-columns: 0.5fr 1fr 0.5fr;
-  padding: 0 140px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 60px;
 }
 
 .app-header__logo {
@@ -176,7 +175,7 @@ main {
   bottom: 0;
 }
 
-.app-section--image-peak {
+/* .app-section--image-peak {
   background: linear-gradient(
       to top,
       rgba(65, 65, 65, 0.5),
@@ -186,9 +185,16 @@ main {
   height: 800px;
   max-width: 100%;
   color: white;
-}
+} */
 
 .app-section__article {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-column-gap: 90px;
+  margin: 0 140px;
+}
+
+/* .app-section__article {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-column-gap: 90px;
@@ -204,8 +210,8 @@ main {
   text-transform: uppercase;
   width: 135px;
 }
-
-.app-section--image-culture {
+*/
+/* .app-section--image-culture {
   background: linear-gradient(
       to top,
       rgba(65, 65, 65, 0.7),
@@ -215,18 +221,18 @@ main {
   height: 698px;
   max-width: 100%;
   color: white;
-}
+} */
 .hide-input {
   display: none;
 }
-.app-section__button--our-culture {
+/* .app-section__button--our-culture {
   width: 150px;
   height: 150px;
   border-radius: 50%;
   margin: 64px auto;
   padding: 0;
   font-size: 4rem;
-}
+} */
 .app-section--join-our-program {
   background-image: url(../assets/images/join-section.png);
   height: 436px;
