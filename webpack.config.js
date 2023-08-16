@@ -25,9 +25,18 @@ module.exports = (env, argv) => {
             },
           },
         },
+
         {
           test: /\.css$/,
           use: ["style-loader", "css-loader"],
+        },
+        {
+          test: /\.js$/,
+          exclude: /node_modules/,
+          loader: "eslint-loader",
+          options: {
+            fix: true,
+          },
         },
         {
           test: /\.(png|jpg|gif)$/i,
