@@ -12,19 +12,14 @@ self.addEventListener("message", (event) => {
     self.postMessage({ type: "emailValidationResult", payload: isEmailValid });
   } else if (type === "subscriptionAction") {
     const { email, isSubscribed } = payload;
-    // Your subscription action logic here
-    const success = true; // Replace with actual success status
+    const success = true;
     self.postMessage({ type: "subscriptionActionResult", payload: success });
   } else if (type === "analyticsData") {
-    // Push the incoming analytics data to the batch
     dataBatch.push(payload);
 
-    // Check if the batch size has reached the limit
     if (dataBatch.length >= batchLimit) {
-      // Send the batch of data to the server
       sendBatchToServer(dataBatch);
       console.log("Worker sent analytics batch to server:", dataBatch);
-      // Clear the batch
       dataBatch = [];
     }
   }
