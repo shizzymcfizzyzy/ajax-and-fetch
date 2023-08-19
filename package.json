@@ -2,7 +2,6 @@
   "name": "webpack-task",
   "version": "1.0.0",
   "description": "task about webpack",
-  "type": "module",
   "main": "main.js",
   "bin": {
     "www": "./bin/www.js"

@@ -31,14 +31,6 @@ module.exports = (env, argv) => {
           use: ["style-loader", "css-loader"],
         },
         {
-          test: /\.js$/,
-          exclude: /node_modules/,
-          loader: "eslint-loader",
-          options: {
-            fix: true,
-          },
-        },
-        {
           test: /\.(png|jpg|gif)$/i,
           type: "asset/resource",
         },

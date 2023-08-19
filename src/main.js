@@ -1,11 +1,17 @@
-// import isValid from "./email-validator";
-
 import "../styles/style.css";
-import isValid from "../server/src/validate-email";
+import isValid from "./email-validator";
+
+const worker = new Worker(new URL("./worker.js", import.meta.url));
+
+let sectionCreator;
+
 class Section {
   constructor(title, buttonText) {
     this.title = title;
     this.buttonText = buttonText;
+
+    this.inputEmail = null;
+    this.submitButton = null;
     this.sectionElement = this.createSection();
   }
 
@@ -23,40 +29,76 @@ class Section {
     const form = document.createElement("form");
     form.id = "subscribeForm";
 
-    const inputEmail = document.createElement("input");
+    this.inputEmail = document.createElement("input");
+    this.inputEmail.type = "email";
+    this.inputEmail.className = "input-email";
+    this.inputEmail.placeholder = "email";
+    this.inputEmail.id = "email";
+    this.inputEmail.name = "email";
 
-    inputEmail.type = "email";
-    inputEmail.className = "input-email";
-    inputEmail.placeholder = "email";
-    inputEmail.id = "email";
-    inputEmail.name = "email";
-
-    const submitButton = document.createElement("button");
-    submitButton.type = "submit";
-    submitButton.className =
+    this.submitButton = document.createElement("button");
+    this.submitButton.type = "submit";
+    this.submitButton.className =
       "app-section__button subscribe-button app-section__button--read-more";
-    submitButton.textContent = this.buttonText;
+    this.submitButton.textContent = this.buttonText;
 
-    form.appendChild(inputEmail);
-    form.appendChild(submitButton);
+    form.appendChild(this.inputEmail);
+    form.appendChild(this.submitButton);
     joinProgram.appendChild(title);
     joinProgram.appendChild(subtitle);
     joinProgram.appendChild(form);
 
-    submitButton.addEventListener("click", (event) => {
+    this.submitButton.addEventListener("click", (event) => {
       event.preventDefault();
 
-      const email = inputEmail.value;
+      const email = this.inputEmail.value;
       const isEmailValid = isValid(email);
+      const isSubscribed = this.submitButton.textContent === "Subscribe";
+
+      if (isEmailValid) {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", isSubscribed ? "/subscribe" : "/unsubscribe", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+
+        xhr.onload = function () {
+          if (xhr.status === 200) {
+            const responsePayload = JSON.parse(xhr.responseText);
+            if (isSubscribed) {
+              localStorage.setItem("subscriptionEmail", email);
+              sectionCreator.submitButton.textContent = "Unsubscribe";
+              sectionCreator.inputEmail.classList.add("hide-input");
+              alert("You have successfully subscribed!");
+            } else {
+              localStorage.removeItem("subscriptionEmail");
+              sectionCreator.inputEmail.value = "";
+              sectionCreator.submitButton.textContent = "Subscribe";
+              sectionCreator.inputEmail.classList.remove("hide-input");
+              alert("You have successfully unsubscribed!");
+            }
+          } else if (xhr.status > 400) {
+            alert("Failed to perform the action. Please try again later.");
+          }
+        };
+
+        xhr.onerror = function () {
+          alert("An error occurred. Please try again later.");
+        };
+
+        const data = JSON.stringify({ email });
+        xhr.send(data);
+      } else {
+        alert("Invalid email address. Please try again");
+      }
+
+      sendMessageToWorker("subscriptionAction", { email, isSubscribed });
     });
 
     const savedEmail = localStorage.getItem("subscriptionEmail");
     if (savedEmail) {
-      inputEmail.value = savedEmail;
-      submitButton.textContent = "Unsubscribe";
-      inputEmail.classList.add("hide-input");
+      this.inputEmail.value = savedEmail;
+      this.submitButton.textContent = "Unsubscribe";
+      this.inputEmail.classList.add("hide-input");
     }
-
     return joinProgram;
   }
 
@@ -116,8 +158,12 @@ class Section {
   }
 }
 
+function sendMessageToWorker(type, payload) {
+  worker.postMessage({ type, payload });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  const sectionCreator = new Section("Join Our Program", "Subscribe");
+  sectionCreator = new Section("Join Our Program", "Subscribe");
   const appContainer = document.getElementById("app-container");
 
   sectionCreator.populateCommunitySection();
@@ -125,6 +171,40 @@ document.addEventListener("DOMContentLoaded", () => {
   const footer = document.querySelector("footer");
 
   appContainer.insertBefore(sectionCreator.sectionElement, footer);
+
+  function sendAnalyticsDataToWorker(email, isSubscribed) {
+    // eslint-disable-next-line no-unused-vars
+    const analyticsData = {
+      timestamp: Date.now(),
+      data: [
+        {
+          eventType: "buttonClick",
+          userEmail: email,
+          subscriptionStatus: isSubscribed ? "Subscribed" : "Unsubscribed",
+        },
+      ],
+    };
+
+    fetch("http://localhost:3000/analytics/user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(analyticsData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Analytics data sent successfully to server:", data);
+        sendMessageToWorker("analyticsDataSent");
+      })
+      .catch((error) => {
+        console.error("Error sending analytics data:", error);
+      });
+    sendMessageToWorker("analyticsData", analyticsData);
+  }
+
+  const inputEmail = sectionCreator.inputEmail;
+  const submitButton = sectionCreator.submitButton;
 
   const handleSubscription = () => {
     const email = inputEmail.value;
@@ -151,6 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
             inputEmail.classList.remove("hide-input");
             alert("You have successfully unsubscribed!");
           }
+          sendAnalyticsDataToWorker(email, isSubscribed);
         } else if (xhr.status > 400) {
           alert("Failed to perform the action. Please try again later.");
         }
@@ -165,20 +246,9 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       alert("Invalid email address. Please try again");
     }
+
+    sendMessageToWorker("subscriptionAction", { email, isSubscribed });
   };
-
-  const inputEmail = document.getElementById("email");
-  const submitButton = document.querySelector(".subscribe-button");
-  let isRequestInProgress = false;
-
-  function updateButtonStatus(isDisabled) {
-    submitButton.disabled = isDisabled;
-    if (isDisabled) {
-      submitButton.style.opacity = 0.5;
-    } else {
-      submitButton.style.opacity = 1;
-    }
-  }
 
   submitButton.addEventListener("click", handleSubscription);
 
@@ -188,4 +258,26 @@ document.addEventListener("DOMContentLoaded", () => {
     submitButton.textContent = "Unsubscribe";
     inputEmail.classList.add("hide-input");
   }
+
+  inputEmail.addEventListener("input", (event) => {
+    const email = event.target.value;
+    sendMessageToWorker("emailInput", email);
+  });
+
+  worker.addEventListener("message", (event) => {
+    const { type, payload } = event.data;
+
+    if (type === "emailValidationResult") {
+      const isEmailValid = payload;
+    } else if (type === "subscriptionActionResult") {
+      const success = payload;
+      if (success) {
+        console.log("Successful subscription");
+      } else {
+        console.log("Subscription failed");
+      }
+    } else if (type === "analyticsDataSent") {
+      console.log("Analytics data sent successfully to server");
+    }
+  });
 });
